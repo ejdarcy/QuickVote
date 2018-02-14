@@ -1,0 +1,118 @@
+$def with (base,data,LI)
+$var base: $:base
+$var title: QuickVote Results
+$var loggedIn: $:LI
+
+<script type="text/javascript">
+
+</script>
+
+<div class="row">
+	<div class="panel panel-default">
+  	<div class="panel-heading">
+    	<h3 class="panel-title">Quiz</h3>
+  	</div>
+  	<div class="panel-body">
+
+		<div class="col-md-12">
+			<div class="btn-group">
+				<button id="active_question" class="btn btn-default">
+					Question
+				</button>
+				<button data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu scrollable-menu">
+					<li>
+						<a onclick="new_question();">New</a>
+					</li>
+					<li class="divider">
+					$for q in data['existing_questions']:
+						</li>
+						<li>
+							<a onclick="choose(this.id);" id="$q['uuid']">$q['question']</a>
+						</li>
+				</ul>
+			</div>
+
+			<form role="form" id="editform">
+				<small>
+				<div class="form-group">
+
+					<label for="uuid">
+						UUID
+					</label>
+					<input type="text" readonly="readonly" class="form-control" name="uuid" id="uuid" />
+				</div>
+				<div class="form-group">
+
+					<label for="domain">
+						domain
+					</label>
+					<input type="text" readonly="readonly" class="form-control" name="domain" id="domain" />
+				</div>
+				</small>
+				<div class="form-group">
+
+					<label for="question">
+						Question
+					</label>
+					<input type="text" class="form-control" name="question" id="question" placeholder="enter your question here, e.g. What is the meaning of life?"/>
+				</div>
+					<div class="media">
+					  	<div class="media-body">
+							<div class="form-group">
+
+								<label for="image">
+									Image
+								</label>
+								<!-- Old upload method
+								<input type="text" class="media-heading " name="image" id="image" placeholder="paste any image here"/>
+								-->
+								<div class="input-group">
+									<input id="selectedImage" placeholder="Choose File" disabled="disabled" />
+									<div class="fileUpload btn btn-primary" style="clear: both;">
+									    <span>Upload Image</span>
+									    <input id="image" type="file" accept="image/*" class="upload" />
+									</div>
+									<p>or Paste image below (Select and press Ctrl+V)</p>
+
+									<!-- To make sure the image data gets sent to the server -->
+									<input type="text" name="image" id="base64Image" readonly hidden />
+								</div>
+							</div>
+						  	<div class="media-right">
+								<canvas style="border:1px solid grey;" id="image_canvas" width="300" height="200"></canvas>
+				      			<!--<img  height="200px" class="media-object" id="pastedImage"/>-->
+						  	</div>
+					</div>
+				</div>
+				<div class="form-group">
+
+					<label for="options">
+						Options (comma-separated)
+					</label>
+					<input type="text" class="form-control" name="options" id="options" placeholder="comma-separated list of options, e.g. A,B,C"/>
+				</div>
+				<div class="form-group">
+
+					<label for="correct_opt">
+						All correct options (comma-separated)
+					</label>
+					<input type="text" class="form-control" name="correct" id="correct_opt" placeholder="comma-separated list of CORRECT options, e.g. B,C"/>
+				</div>
+				</form>
+				<div class="btn-bottom-group">
+					<button type="button" class="btn btn-default" onclick="submit_edits();">
+						Save
+					</button>
+					<button type="button" class="btn btn-danger" onclick="delete_question();">
+						Delete
+					</button>
+					<button type="button" class="btn btn-default" onclick="add_question();">
+						Add another question
+					</button>
+			</div>
+		</div>
+	</div>
+</div>

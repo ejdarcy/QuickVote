@@ -325,6 +325,51 @@ class editor:
 
         return renderer.editor(config.base_url,data,logman.LoggedIn())
 
+class quiz:
+
+    def GET(self, domain):
+
+        # check logged in
+        if not logman.LoggedIn():
+            print "Failed Login!"
+            return web.seeother('/login')
+
+        # check for valid domain
+        if not qv_domains.is_domain(domain):
+            print "Failed domain check!"
+            return web.notacceptable()
+
+        # check that user has access to this domain
+        attempt_at_access = qv_domains.Access_domain(domain,web.cookies().get('QV_Usr'))
+        if logman.isAdmin() or attempt_at_access == "Coord" or attempt_at_access == "Quiz":
+            print "Authourized"
+        else:
+            print "Failed Access!"
+            return web.notacceptable()
+
+
+        qs = qv_questions.find({'domain': domain}).sort([('inserted_at', -1)])
+
+        data = {
+            'existing_questions': [],
+            'new_uuid': uuid4(),
+            'domain': domain,
+            'active_question': qv_domains.get_active_question(domain),
+            'submit_url': glob.urls['question_post']['url_pattern']
+            % (domain),
+            'get_url': glob.urls['question_get']['url_pattern'] % (domain, ''),
+            'get_results_url': glob.urls['results_get']['url_pattern']
+            % (domain, ''),
+            'delete_url': glob.urls['answers_post']['url_pattern'] % (domain, ''),
+            'results_url': glob.urls['view']['url_pattern'] % (domain),
+            'history_url': glob.urls['history']['url_pattern'] % (domain),
+        }
+
+        qsd = [q for q in qs]
+
+        data['existing_questions'] = qsd
+
+        return renderer.quiz(config.base_url,data,logman.LoggedIn())
 
 class admin:
 
