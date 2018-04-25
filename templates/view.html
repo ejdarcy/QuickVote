@@ -10,22 +10,19 @@ $var loggedIn: $:LI
 	var race_background = new Image();
 	var rocket_off = new Image();
 	var rocket_on = new Image();
-	var rocket = new Image();
 	var fuel_tank = new Image();
-	var rocket_state = true;
 	var rr_canvas;
 	var rr_ctx;
 	var race_interval;
 	var rocket_list = [];
 	var enableRockets = false;
 	var rocket_team_size = 0; //the desired team size where the rocket will start flying if this is met
-	var question = "";
 
 	function loadImages() {
-		race_background.src = "https://image.ibb.co/e5m297/sai_Uf_L2_space_star_background_numbered.png";
-		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png";
-		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png";
-		fuel_tank.src = "https://image.ibb.co/kZAj77/fuel_24_2x.png";
+		race_background.src = "https://image.ibb.co/e5m297/sai_Uf_L2_space_star_background_numbered.png"; //source: https://www.dreamstime.com/stock-photo-stars-galaxy-outer-space-sky-night-universe-background-stars-galaxy-outer-space-sky-night-universe-black-background-image99011154
+		rocket_off.src = "https://image.ibb.co/j6haQH/cohete_off.png"; //source: https://opengameart.org/content/rocket
+		rocket_on.src = "https://image.ibb.co/nvbrzc/cohete_on_wf.png"; //source: https://opengameart.org/content/rocket
+		fuel_tank.src = "https://image.ibb.co/kZAj77/fuel_24_2x.png"; //source: https://findicons.com/icon/577345/fuel_24_2x
 	}
 
 	function new_session() {
@@ -114,6 +111,7 @@ $var loggedIn: $:LI
 				for (var i = 0; i < team_array.length; i++) {
 					found = false;
 
+					//if it is team 1, x coord should be 120, otherwise it should be 220, 320 etc
 					if (team_array[i] == 1) {
 						x_pos = 120;
 					} else {
@@ -145,6 +143,7 @@ $var loggedIn: $:LI
 		}
 	}
 
+	//create 6 fuel tanks
 	function display_fuel() {
 		 var divBody = document.getElementById("rocketRaceFuel");
 		 for (var i = 1; i < 7; i++) {
@@ -164,7 +163,6 @@ $var loggedIn: $:LI
 			inner.setAttribute("aria-valuemax", "100");
 			inner.setAttribute("aria-valuenow", "0");
 			progressBar.appendChild(inner);
-			doOrder();
 
 			var firstProgressBar = document.getElementsByClassName("progress")[0];
 			firstProgressBar.style.marginLeft = "-60px";
@@ -183,22 +181,13 @@ $var loggedIn: $:LI
 					inner.setAttribute("aria-valuenow", percent);
 					inner.innerText = parseInt(percent) + "% Full";
 				} catch(e) {
-
+					console.log(e);
 				}
 			}
 	}
 
-  function doOrder()
-  {
-		var main = document.getElementById("rocketRaceFuel");
-		[].map.call( main.children, Object ).sort( function ( a, b ) {
-    	return +a.id.match( /\d+/ ) - +b.id.match( /\d+/ );
-		}).forEach( function ( elem ) {
-    	main.appendChild( elem );
-		});
-  }
-
 	function delete_fuel() {
+		//delete all fuel tanks
 		$$("#rocketRaceFuel .progress").remove();
 	}
 
@@ -215,15 +204,19 @@ $var loggedIn: $:LI
 	function calculate_ycoord() {
 			for (var i = 0; i < rocket_list.length; i++) {
 				var y_coord = parseInt(rocket_list[i].group_correct * 800);
+				//As the top of the canvas is (0,0), the calculated y-coord needs to be subtracted from 800
 				y_coord = 800 - y_coord;
+				//if the destination y_coord is different to the one just calculated - replace it
 				if (rocket_list[i].y_coord != y_coord) {
 					rocket_list[i].y_coord = y_coord;
 					rocket_list[i].y_changed = true;
 				} else {
 					rocket_list[i].y_changed = false;
 				}
+				//starting point is 650 so the whole rocket is displayed - so if destination y-coord is higher than this, replace it with 650
 				rocket_list[i].y_coord = rocket_list[i].y_coord > 650 ? 650 : rocket_list[i].y_coord;
 			}
+			//start the rocket race animation
 			race_interval = setInterval(function() {
 				display_rockets();
 			}, 300);
@@ -231,13 +224,13 @@ $var loggedIn: $:LI
 
 	function display_rockets() {
 
-		 updateFrame(0,0);
-
  	   calculate_fuel();
 		 for (var i = 0; i < rocket_list.length; i++) {
+			 //if the amount of responses in this team is not bigger than the threshold - do not move the rockets
 			 if (rocket_list[i].group_size >= rocket_team_size) {
 				 if (rocket_list[i].y_coord > rocket_list[i].current_y_coord) {
 					 //team answered incorrect answer - rocket needs to go down
+					 //calculate the speed at which to travel by ratio of the distance between the current and destination y-coord
 					 var distanceTravel = rocket_list[i].y_coord == 0 ? 2 : (parseInt(2 *(rocket_list[i].current_y_coord / rocket_list[i].y_coord)));
 					 distanceTravel = distanceTravel <= 0 ? 2 : distanceTravel;
 					 travelDown(i, distanceTravel);
@@ -252,12 +245,14 @@ $var loggedIn: $:LI
 	}
 
 	function travelUp(i, distanceTravel) {
+		//if the destination y-coord has been updated or the current y-coord is bigger than the destination - the rocket needs to ascend
 		if ((rocket_list[i].y_changed == true && rocket_list[i].y_coord < rocket_list[i].current_y_coord) || rocket_list[i].y_coord < rocket_list[i].current_y_coord) {
+				//create rocket animations - calculating new current y-coord and displaying the rocket with its engine on in the new position
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord - distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
-
 		} else {
+			//create rocket animations - display the rocket in position with it engine off and clear the interval ready for new data
 			updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
 			rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
 			clearInterval(race_interval);
@@ -265,12 +260,13 @@ $var loggedIn: $:LI
 	}
 
 	function travelDown(i, distanceTravel) {
+		//if the destination y-coord has been updated or the current y-coord is smaller than the destination - the rocket needs to descend
 		if ((rocket_list[i].y_changed == true && rocket_list[i].y_coord > rocket_list[i].current_y_coord) || rocket_list[i].y_coord > rocket_list[i].current_y_coord){
 				updateFrame(rocket_list[i].x_coord, rocket_list[i].current_y_coord);
 				rocket_list[i].current_y_coord = rocket_list[i].current_y_coord + distanceTravel;
 				rr_ctx.drawImage(rocket_on, rocket_list[i].x_coord, rocket_list[i].current_y_coord, 50,120);
-
 		} else {
+			//create rocket animations - display the rocket in position with it engine off and clear the interval ready for new data
 			updateFrame(rocket_list[i].x_coord, rocket_list[i].y_coord)
 			rr_ctx.drawImage(rocket_off, rocket_list[i].x_coord, rocket_list[i].y_coord, 50,90);
 			clearInterval(race_interval);
@@ -278,11 +274,6 @@ $var loggedIn: $:LI
 	}
 
 	function updateFrame(x_pos, y_pos) {
-		if (rocket_state == true) {
-			rocket = rocket_on;
-		} else {
-			rocket = rocket_off;
-		}
 		rr_ctx.drawImage(race_background,x_pos,y_pos, 50, 140,x_pos,y_pos, 50, 140);
 	}
 
